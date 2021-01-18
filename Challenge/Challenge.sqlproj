@@ -60,6 +60,7 @@
     <Folder Include="Core" />
     <Folder Include="Interfaces" />
     <Folder Include="Extensions" />
+    <Folder Include="Models" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\BigBitBlob.cs" />
@@ -74,6 +75,8 @@
     <Compile Include="Extensions\StringEx.cs" />
     <Compile Include="Extensions\NumberEx.cs" />
     <Compile Include="Extensions\EnumEx.cs" />
+    <Compile Include="Models\PermissionSet.cs" />
+    <Compile Include="Models\User.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Xml" />

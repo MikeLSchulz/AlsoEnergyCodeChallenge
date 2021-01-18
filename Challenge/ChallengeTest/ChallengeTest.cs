@@ -1,5 +1,7 @@
 ﻿using AE.CoreUtility;
+using AE.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Xunit;
@@ -8,6 +10,96 @@ namespace ChallengeTest
 {
     public class ChallengeTest
     {
+        [Fact]
+        public void TestPermissions()
+        {
+            string p1 = "permission1";
+            string p2 = "permission2";
+            string p3 = "permission3";
+            PermissionSet permissionSet;
+
+            // Test string array constructor.
+            permissionSet = new PermissionSet((ISet<string>)null);
+            Assert.Empty(permissionSet.Permissions);
+            Assert.Empty(permissionSet.ToByteArray());
+
+            // Test blob constructor.
+            permissionSet = new PermissionSet((byte[])null);
+            Assert.Empty(permissionSet.Permissions);
+            Assert.Empty(permissionSet.ToByteArray());
+
+            // Test string collections.
+            permissionSet = new PermissionSet(new HashSet<string> { p1 });
+            Assert.Equal(p1, permissionSet.Permissions.Single());
+            permissionSet = new PermissionSet(new HashSet<string> { p1, p2 });
+            Assert.Contains(p1, permissionSet.Permissions);
+            Assert.Contains(p2, permissionSet.Permissions);
+            Assert.Equal(2, permissionSet.Permissions.Count);
+            permissionSet = new PermissionSet(new HashSet<string> { p1, p2, p3 });
+            Assert.Contains(p1, permissionSet.Permissions);
+            Assert.Contains(p2, permissionSet.Permissions);
+            Assert.Contains(p3, permissionSet.Permissions);
+            Assert.Equal(3, permissionSet.Permissions.Count);
+            permissionSet = new PermissionSet(new HashSet<string> { p1, p2, p1 });
+            Assert.Contains(p1, permissionSet.Permissions);
+            Assert.Contains(p2, permissionSet.Permissions);
+            Assert.Equal(2, permissionSet.Permissions.Count);
+
+            // Test blob collections.
+            permissionSet = new PermissionSet(Encoding.UTF8.GetBytes(p1));
+            Assert.Equal(p1, permissionSet.Permissions.Single());
+            permissionSet = new PermissionSet(Encoding.UTF8.GetBytes(p1 + "," + p2));
+            Assert.Contains(p1, permissionSet.Permissions);
+            Assert.Contains(p2, permissionSet.Permissions);
+            Assert.Equal(2, permissionSet.Permissions.Count);
+            permissionSet = new PermissionSet(Encoding.UTF8.GetBytes(p1 + "," + p2 + "," + p3));
+            Assert.Contains(p1, permissionSet.Permissions);
+            Assert.Contains(p2, permissionSet.Permissions);
+            Assert.Contains(p3, permissionSet.Permissions);
+            Assert.Equal(3, permissionSet.Permissions.Count);
+            permissionSet = new PermissionSet(Encoding.UTF8.GetBytes(p1 + "," + p2 + "," + p1));
+            Assert.Contains(p1, permissionSet.Permissions);
+            Assert.Contains(p2, permissionSet.Permissions);
+            Assert.Equal(2, permissionSet.Permissions.Count);
+
+            // Test BlobIO.
+            HashSet<string> permissions = new HashSet<string> { p1, p2 };
+            string[] map = { "PermissionSet" };
+            object[] val = { new PermissionSet(permissions) };
+            BlobIO b = new BlobIO(map, val);
+            Assert.Equal(b.Get<PermissionSet>(0).Permissions.Count, permissions.Count);
+            Assert.Equal(b.Get<PermissionSet>(0).Permissions, permissions);
+        }
+
+        [Fact]
+        public void TestUser()
+        {
+            string name = "MrBigglesworth";
+            string p1 = "permission1";
+            string timeZone = "PST";
+            string color = "CornflowerBlue";
+            DateTime currentTime = DateTime.UtcNow;
+            User user = new User();
+            BlobIO blob = user.Serialize();
+            Assert.Equal(blob.Get<string>(0), null);
+
+            user = new User
+            {
+                UserName = name,
+                Permissions = new PermissionSet(new HashSet<string> { p1 }),
+                CreateDate = currentTime,
+                Timezone = timeZone,
+                FavoriteColor = color
+
+            };
+            blob = user.Serialize();
+            Assert.Equal(blob.Get<string>(0), name);
+            Assert.Equal(blob.Get<PermissionSet>(1).Permissions.Single(), p1);
+            Assert.Equal(blob.GetDateTime(2)?.Ticks, currentTime.Ticks);
+            Assert.Equal(blob.Get<string>(3), timeZone);
+            Assert.Equal(blob.Get<string>(4), color);
+        }
+
         public readonly static Guid TestGuid = new Guid(new string('F', 32));
 
         [Fact]
